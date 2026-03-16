@@ -1,0 +1,8 @@
+
+# Envionrment Variables and dev
+.venv/
+.env
+
+#Data
+.vol/
+

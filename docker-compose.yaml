@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    container_name: task-api-bcknd
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: postgres-taskapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./.vol/db/data:/var/lib/postgresql/data"
+    networks:
+      - taskapi-net
+    environment:
+        POSTGRES_USER: task-api-usr
+        POSTGRES_DB: tasks
+        POSTGRES_PASSWORD: myk-psdb
+    healthcheck:
+      test: ["CMD", "pg_isready",  "-U", "task-api-usr", "-d", "tasks"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  taskapi-net:
+    driver: bridge
