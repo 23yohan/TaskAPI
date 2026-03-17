@@ -1,14 +1,22 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from .config import Config
+from .config import Config, configTypes
 
 db = SQLAlchemy()
 migrate = Migrate()
 
-def create_app():
+def create_app(conf="dev"):
+    """
+    @Brief: Function creates the app
+    @Param: conf - The config we want to use. three types
+                    dev - Config for development
+                    prod - Config used for production
+                    testing - Config used for unit testing
+    @Return: app - The flask application
+    """
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(configTypes[conf])
 
     db.init_app(app)
     migrate.init_app(app, db)
