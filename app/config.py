@@ -8,4 +8,15 @@ class Config():
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-#TODO: Add some subclasses for specific configs (setting dev/prod flags)
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+configTypes = {
+    "prod" : Config,
+    "testing" : TestingConfig,
+    "dev" : DevelopmentConfig
+}
