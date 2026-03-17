@@ -15,5 +15,10 @@ def create_app():
 
     with app.app_context():
         from .models import task
+        from .routes.health import health_bp
+        from .routes.tasks import crud_bp
+
+        app.register_blueprint(health_bp, url_prefix='/health')
+        app.register_blueprint(crud_bp, url_prefix='/api')
 
     return app
