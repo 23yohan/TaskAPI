@@ -2,6 +2,15 @@ services:
   app:
     build: .
     container_name: task-api-bcknd
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=run.py
+      - SECRET_KEY=hello
+      - DATABASE_URL=postgresql://task-api-usr:myk-psdb@db:5432/tasks
+    networks:
+      - taskapi-net
+    ports:
+      - "5001:5000"
     depends_on:
       db:
         condition: service_healthy
