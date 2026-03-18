@@ -1,7 +1,7 @@
 # TaskAPI Project
 
 ## Overview
-This project goal is to create a backend for a task application where users can create, modify and store tasks. This is created with a using a Flask framework with a postgreSQL database. 
+This project goal is to create a backend for a task application where users can create, modify and store tasks. This is created with a using a python backend and Flask framework with a postgreSQL database. 
 
 ## Installation
 The project depends on a number of python modules outlined in the ```requirements.txt``` file. In addition to this, the following dependencies are required
