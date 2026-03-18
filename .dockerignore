@@ -1,0 +1,9 @@
+.venv/
+.vol/
+.pytest_cache/
+tests/
+migrations/
+.git/
+.gitignore
+# Ignore the env and set it later
+.env
