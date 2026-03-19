@@ -22,7 +22,7 @@ def create_app(conf="dev"):
     migrate.init_app(app, db)
 
     with app.app_context():
-        from .models import task
+        from .models import task, users
         from .routes.health import health_bp
         from .routes.tasks import crud_bp
 
