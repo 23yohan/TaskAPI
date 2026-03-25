@@ -4,9 +4,10 @@ from datetime import datetime as dt
 from datetime import timezone as tz
 from app import db
 
+# TODO: Could look to make email a primary key since i dont want duplicate emails in table
 class Users(db.Model):
     __tablename__ = "users"
-
+    
     userId : Mapped[int]    = mapped_column("user_id", Integer, primary_key=True)
     firstName : Mapped[str] = mapped_column("first_name", String, nullable=True)
     lastName : Mapped[str]  = mapped_column("last_name", String, nullable=True)
