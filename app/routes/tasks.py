@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from app import db
 from app.models.task import Tasks
+from app.models.users import Users
 
 crud_bp = Blueprint("api", __name__)
 
@@ -129,3 +130,27 @@ def delete_task(task_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": "unable to delete record"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@crud_bp.route("/tasks/assign/<int:task_id>/<string:user_email>", methods=["PATCH"])
+def assign_task(task_id: int, user_email: str):
+
+    # First we need to get the userId we are trying to assign
+    usr = db.session.execute(
+        select(Users).filter_by(email=user_email)
+        ).scalar_one_or_none()
+    tsk = db.session.get(Tasks, task_id)
+
+    if not usr:
+        return jsonify({"message" : "unable to find user"}), HTTPStatus.NOT_FOUND
+    
+    if not tsk:
+        return jsonify({"message" : "unable to find task"}), HTTPStatus.NOT_FOUND
+
+    try:
+        tsk.assigned_to = usr.userId
+        db.session.commit()
+        return jsonify(tsk.to_dict()), HTTPStatus.OK
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message" : "Unable to assign task"}), HTTPStatus.SERVICE_UNAVAILABLE
