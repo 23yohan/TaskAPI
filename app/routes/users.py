@@ -13,7 +13,7 @@ from app.models.task import Tasks
 
 users_bp = Blueprint("users", __name__)
 
-@users_bp.route("/add_user", methods=["POST"])
+@users_bp.route("/create", methods=["POST"])
 def create_user():
 
     # We want to get the response
@@ -47,7 +47,7 @@ def create_user():
     
     # If we get here we can store values
     # store the password encrypted
-    hashPwd = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    hashPwd = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8") # Converting from bytes to string to satisfy ORM datatype
     usr = Users(firstName =firstName, lastName=lastName, email=email, password=hashPwd)
 
     try:
