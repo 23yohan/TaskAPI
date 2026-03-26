@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column, Relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey
 from datetime import datetime as dt
 from datetime import timezone as tz
@@ -20,8 +20,8 @@ class Tasks(db.Model):
     created_by : Mapped[int]  = mapped_column("created_by", Integer, ForeignKey("users.user_id"), nullable=False)
     assigned_to : Mapped[int]  = mapped_column("assigned_to", Integer, ForeignKey("users.user_id"), nullable=True)
 
-    creator = Relationship("Users", foreign_keys=[created_by], backref=["created_tasks"])
-    assignee = Relationship("Users", foreign_keys=[assigned_to], backref="assigned_tasks")
+    creator = relationship("Users", foreign_keys=[created_by], backref="created_tasks")
+    assignee = relationship("Users", foreign_keys=[assigned_to], backref="assigned_tasks")
 
     def to_dict(self):
         """
