@@ -9,9 +9,9 @@ from app import db
 from app.models.task import Tasks
 from app.models.users import Users
 
-crud_bp = Blueprint("api", __name__)
+crud_bp = Blueprint("tasks", __name__)
 
-@crud_bp.route("/tasks", methods=["POST"])
+@crud_bp.route("/create", methods=["POST"])
 def create_task():
     """
     @Brief: Function creates a task
@@ -30,12 +30,25 @@ def create_task():
     if not title: 
         return jsonify({"message" : "Title is required"}), HTTPStatus.BAD_REQUEST
 
-    description = data.get('description')
-    completed = data.get('completed', False) # if completed status isnt provided, assume false
-    createdAt = dt.now(tz.utc)
-    tsk = Tasks(title=title, description=description, completed=completed, created_at=createdAt)
+    user = data.get('user')
+    if not user or '@' not in user:
+        return jsonify({"message" : "no user provided"}), HTTPStatus.BAD_REQUEST
+
+    usr = db.session.execute(
+        select(Users).filter_by(email=user)
+    ).scalar_one_or_none()
+
+    if not usr:
+        return jsonify({"message" : "user does not exist"}), HTTPStatus.NOT_FOUND
 
     try:
+        tsk = Tasks(
+            title=title, 
+            description=data.get('description'), 
+            completed=data.get('completed', False), 
+            created_at=dt.now(tz.utc), 
+            created_by=usr.userId)
+
         db.session.add(tsk)
         db.session.commit()
         return jsonify(tsk.to_dict()), HTTPStatus.CREATED
@@ -45,7 +58,7 @@ def create_task():
         return jsonify({"message" : "Error logging to db"}), HTTPStatus.SERVICE_UNAVAILABLE
 
 
-@crud_bp.route("/tasks", methods=["GET"])
+@crud_bp.route("/", methods=["GET"])
 def get_tasks():
     """
     @Brief: Function gets all of the tasks in the database
@@ -73,7 +86,7 @@ def get_tasks():
         return jsonify({"message" : "Unable to get all tasks"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@crud_bp.route("/tasks/<int:task_id>", methods=["GET"])
+@crud_bp.route("/<int:task_id>", methods=["GET"])
 def get_single_task(task_id):
     """
     @Brief: Function gets a task based on the ID
@@ -91,7 +104,7 @@ def get_single_task(task_id):
     except Exception as e:
         return jsonify({"message" : "Unable to process request"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
-@crud_bp.route("/tasks/<int:task_id>", methods=["PATCH"])
+@crud_bp.route("/<int:task_id>", methods=["PATCH"])
 def mark_task_complete(task_id):
     """
     @Brief: Function Marks a task complete
@@ -117,7 +130,7 @@ def mark_task_complete(task_id):
         return jsonify({"message" : "Unable to change complete status"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@crud_bp.route("/tasks/<int:task_id>", methods=["DELETE"])
+@crud_bp.route("/<int:task_id>", methods=["DELETE"])
 def delete_task(task_id):
     try:
         tsk = db.session.get(Tasks, task_id)
@@ -131,7 +144,7 @@ def delete_task(task_id):
         db.session.rollback()
         return jsonify({"message": "unable to delete record"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
-@crud_bp.route("/tasks/assign/<int:task_id>/<string:user_email>", methods=["PATCH"])
+@crud_bp.route("/assign/<int:task_id>/<string:user_email>", methods=["PATCH"])
 def assign_task(task_id: int, user_email: str):
 
     # First we need to get the userId we are trying to assign
