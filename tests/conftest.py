@@ -2,6 +2,7 @@ from app import create_app, db
 from flask.testing import FlaskClient
 from flask import Flask
 import pytest
+from http import HTTPStatus
 
 @pytest.fixture
 def app():
@@ -25,7 +26,8 @@ def test_user(client: FlaskClient):
         "email" : "admin@taskapi.com",
         "password" : "Ch@ng3Me!"
     }
-    client.post(url,json=data)
+    res = client.post(url,json=data)
+    assert res.status_code == HTTPStatus.CREATED, "Failed to create pyFixure user"
     return data["email"]
 
 @pytest.fixture
@@ -35,6 +37,6 @@ def test_task(client: FlaskClient, test_user: str):
     title = "test Create"
     description = "testing create task"
     data = {"title" : title, "description": description, "user" : test_user}
-    clientResponse = client.post(createUrl, json=data)
-
-    return clientResponse.get_json()
+    res = client.post(createUrl, json=data)
+    assert res.status_code == HTTPStatus.CREATED, "Failed to create pyFixure user"
+    return res.get_json()
