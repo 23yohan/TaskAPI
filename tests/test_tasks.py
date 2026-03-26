@@ -28,40 +28,28 @@ def test_get_task_list(client:FlaskClient):
     response = client.get(url)
     assert response.status_code == HTTPStatus.OK
 
-def test_modify_test_record(client:FlaskClient, test_user: str):
+def test_modify_test_record(client:FlaskClient, test_task: dict):
     """
     @Brief: Function tests the task completed endpoint
     @Param: client - FlaskClient object
     @Assert: 200 - OK
     """
 
-    # Create a record to change
-    createUrl = "/tasks/create"
-    title = "test Create"
-    description = "testing create task"
-    data = {"title" : title, "description": description, "user" : test_user}
-    clientResponse = client.post(createUrl, json=data)
-    taskID = clientResponse.get_json().get("id")
+    taskID = test_task.get("id")
 
     # Modify the test record - completion status
     url = f"/tasks/{taskID}"
     response = client.patch(url)
     assert response.status_code == HTTPStatus.OK
 
-def test_delete_record(client:FlaskClient, test_user: str):
+def test_delete_record(client:FlaskClient, test_task: dict):
     """
     @Brief: Function tests the task delete endpoint
     @Param: client - FlaskClient object
     @Assert: 200 - OK
     """
 
-    #Create something to delete
-    createUrl = "/tasks/create"
-    title = "test Create"
-    description = "testing create task"
-    data = {"title" : title, "description": description, "user" : test_user}
-    clientResponse = client.post(createUrl, json=data)
-    taskID = clientResponse.get_json().get("id")
+    taskID = test_task.get("id")
 
     deleteUrl = f"/tasks/{taskID}"
     response = client.delete(deleteUrl)
