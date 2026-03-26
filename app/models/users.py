@@ -26,5 +26,5 @@ class Users(db.Model):
             "password"   : self.password,
             "active"     : self.active,
             "created_at" : self.createdAt,
-            "deleteDate" : self.deleteDate
+            "deleteDate" : self.deleteDate if self.deleteDate else None
         }
