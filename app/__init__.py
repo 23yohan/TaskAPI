@@ -25,8 +25,10 @@ def create_app(conf="dev"):
         from .models import task, users
         from .routes.health import health_bp
         from .routes.tasks import crud_bp
+        from .routes.users import users_bp
 
         app.register_blueprint(health_bp, url_prefix='/health')
-        app.register_blueprint(crud_bp, url_prefix='/api')
+        app.register_blueprint(crud_bp, url_prefix='/tasks')
+        app.register_blueprint(users_bp, url_prefix='/users')
 
     return app
