@@ -15,3 +15,15 @@ def app():
 @pytest.fixture
 def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+@pytest.fixture
+def test_user(client: FlaskClient):
+    url = "/users/create"
+    data = {
+        "first_name" : "admin",
+        "last_name" : "user",
+        "email" : "admin@taskapi.com",
+        "password" : "Ch@ng3Me!"
+    }
+    client.post(url,json=data)
+    return data["email"]
