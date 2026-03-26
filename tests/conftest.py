@@ -27,3 +27,14 @@ def test_user(client: FlaskClient):
     }
     client.post(url,json=data)
     return data["email"]
+
+@pytest.fixture
+def test_task(client: FlaskClient, test_user: str):
+    
+    createUrl = "/tasks/create"
+    title = "test Create"
+    description = "testing create task"
+    data = {"title" : title, "description": description, "user" : test_user}
+    clientResponse = client.post(createUrl, json=data)
+
+    return clientResponse.get_json()
