@@ -2,7 +2,9 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from .config import Config, configTypes
+from flask_jwt_extended import JWTManager
 
+jwt = JWTManager()
 db = SQLAlchemy()
 migrate = Migrate()
 
@@ -18,6 +20,7 @@ def create_app(conf="dev"):
     app = Flask(__name__)
     app.config.from_object(configTypes[conf])
 
+    jwt.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -26,9 +29,11 @@ def create_app(conf="dev"):
         from .routes.health import health_bp
         from .routes.tasks import crud_bp
         from .routes.users import users_bp
+        from .routes.auth import auth_bp
 
         app.register_blueprint(health_bp, url_prefix='/health')
         app.register_blueprint(crud_bp, url_prefix='/tasks')
         app.register_blueprint(users_bp, url_prefix='/users')
+        app.register_blueprint(auth_bp, url_prefix='/auth')
 
     return app
