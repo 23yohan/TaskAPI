@@ -16,6 +16,7 @@ class Users(db.Model):
     active : Mapped[bool]   = mapped_column("active", Boolean, nullable=False, default=True)
     createdAt: Mapped[dt]   = mapped_column("created_at", DateTime, nullable=False, default=lambda: dt.now(tz.utc))
     deleteDate : Mapped[dt] = mapped_column("delete_date", DateTime, nullable=True)
+    admin : Mapped[bool]    = mapped_column("admin", nullable=False, default=False)
 
     def to_dict(self):
         return {
@@ -26,5 +27,6 @@ class Users(db.Model):
             "password"   : self.password,
             "active"     : self.active,
             "created_at" : self.createdAt,
-            "deleteDate" : self.deleteDate if self.deleteDate else None
+            "deleteDate" : self.deleteDate if self.deleteDate else None,
+            "admin"      : self.admin
         }
