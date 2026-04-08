@@ -2,6 +2,8 @@
 # Envionrment Variables and dev
 .venv/
 .env
+app/__pycache__/
+
 
 #Data
 .vol/
