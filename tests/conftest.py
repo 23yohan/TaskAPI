@@ -28,15 +28,20 @@ def test_user(client: FlaskClient):
     }
     res = client.post(url,json=data)
     assert res.status_code == HTTPStatus.CREATED, "Failed to create pyFixure user"
-    return data["email"]
+    return {"email": data["email"], "password" : data["password"]}
 
 @pytest.fixture
-def test_task(client: FlaskClient, test_user: str):
+def auth_headers(client: FlaskClient, test_user: dict):
+    token = client.post("/auth/login", json=test_user).get_json().get("access_token")
+    return {"Authorization" : f"Bearer {token}"}
+
+@pytest.fixture
+def test_task(client: FlaskClient, auth_headers : dict):
     
     createUrl = "/tasks/create"
     title = "test Create"
     description = "testing create task"
-    data = {"title" : title, "description": description, "user" : test_user}
-    res = client.post(createUrl, json=data)
+    data = {"title" : title, "description": description}
+    res = client.post(createUrl, json=data, headers=auth_headers)
     assert res.status_code == HTTPStatus.CREATED, "Failed to create pyFixure user"
     return res.get_json()
