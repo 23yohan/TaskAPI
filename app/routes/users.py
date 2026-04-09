@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime as dt
 from datetime import timezone as tz
 import re
@@ -23,6 +24,7 @@ def create_user():
     lastName = res.get('last_name')
     email = res.get ('email')
     password = res.get('password')
+    admin = res.get('admin', False)
 
     if not firstName:
         return jsonify({"message" : "First name not provided"}), HTTPStatus.BAD_REQUEST
@@ -48,7 +50,7 @@ def create_user():
     # If we get here we can store values
     # store the password encrypted
     hashPwd = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8") # Converting from bytes to string to satisfy ORM datatype
-    usr = Users(firstName =firstName, lastName=lastName, email=email, password=hashPwd)
+    usr = Users(firstName =firstName, lastName=lastName, email=email, password=hashPwd, admin=admin)
 
     try:
         db.session.add(usr)
@@ -59,8 +61,15 @@ def create_user():
         return jsonify({"message" : "Error creating user"}), HTTPStatus.SERVICE_UNAVAILABLE
 
 @users_bp.route("/delete_user/<string:email>", methods=["DELETE"])
+@jwt_required()
 def delete_user(email):
 
+    # We are going to check that the user executing this call is an admin
+    currUsr = int(get_jwt_identity())
+
+    isAdmin = db.session.get(Users, currUsr).admin
+    if not isAdmin:
+        return jsonify({"message" : "user does not have permissions to delete"}), HTTPStatus.UNAUTHORIZED
     usr = db.session.execute(
         select(Users).filter_by(email=email)
         ).scalar_one_or_none()
