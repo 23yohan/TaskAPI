@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime as dt
 from datetime import timezone as tz
 
-from sqlalchemy import text, select, delete
+from sqlalchemy import text, select, delete, or_
 from http import HTTPStatus
 
 from app import db
@@ -12,6 +13,7 @@ from app.models.users import Users
 crud_bp = Blueprint("tasks", __name__)
 
 @crud_bp.route("/create", methods=["POST"])
+@jwt_required()
 def create_task():
     """
     @Brief: Function creates a task
@@ -22,6 +24,8 @@ def create_task():
     @Returns: tuple - JSON message and return code
 
     """
+    currUsrId = get_jwt_identity() # Returns the userID associated
+
     data = request.get_json()
     if data is None:
         return jsonify({"message": "Invalid JSON"}), HTTPStatus.BAD_REQUEST
@@ -30,24 +34,13 @@ def create_task():
     if not title: 
         return jsonify({"message" : "Title is required"}), HTTPStatus.BAD_REQUEST
 
-    user = data.get('user')
-    if not user or '@' not in user:
-        return jsonify({"message" : "no user provided"}), HTTPStatus.BAD_REQUEST
-
-    usr = db.session.execute(
-        select(Users).filter_by(email=user)
-    ).scalar_one_or_none()
-
-    if not usr:
-        return jsonify({"message" : "user does not exist"}), HTTPStatus.NOT_FOUND
-
     try:
         tsk = Tasks(
             title=title, 
             description=data.get('description'), 
             completed=data.get('completed', False), 
             created_at=dt.now(tz.utc), 
-            created_by=usr.userId)
+            created_by=currUsrId)
 
         db.session.add(tsk)
         db.session.commit()
@@ -59,6 +52,7 @@ def create_task():
 
 
 @crud_bp.route("/", methods=["GET"])
+@jwt_required()
 def get_tasks():
     """
     @Brief: Function gets all of the tasks in the database
@@ -72,9 +66,23 @@ def get_tasks():
             or
                 message - error message associated with request
     """
+    currUsr = int(get_jwt_identity())
     try:
-        tsk = db.session.execute(select(Tasks)).scalars().all()
-        
+
+        # Check if the user is an admin user
+        usr = db.session.get(Users, currUsr)
+
+        if usr.admin:
+            tsk = db.session.execute(select(Tasks)).scalars().all()
+        else:
+            tsk = db.session.execute(
+                select(Tasks).where(
+                    or_(
+                        Tasks.created_by == currUsr,
+                        Tasks.assigned_to == currUsr
+                    )
+                )
+            ).scalars().all()
         # tsk is going to be a list of Tasks objects so we can decode
         tskList = []
         for t in tsk: 
@@ -105,6 +113,7 @@ def get_single_task(task_id):
         return jsonify({"message" : "Unable to process request"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 @crud_bp.route("/<int:task_id>", methods=["PATCH"])
+@jwt_required()
 def mark_task_complete(task_id):
     """
     @Brief: Function Marks a task complete
@@ -118,10 +127,13 @@ def mark_task_complete(task_id):
             or
                 message - error message associated with request
     """
+    currUsr = int(get_jwt_identity())
     try:
         tsk = db.session.get(Tasks, task_id)
         if tsk is None:
-            return jsonify({"Message": "Task not found"}), HTTPStatus.BAD_REQUEST
+            return jsonify({"message": "Task not found"}), HTTPStatus.NOT_FOUND
+        if currUsr != tsk.created_by and currUsr != tsk.assigned_to:
+            return jsonify({"message" : "user cannot modify task"}), HTTPStatus.FORBIDDEN
         tsk.completed = True
         db.session.commit()
 
@@ -130,13 +142,29 @@ def mark_task_complete(task_id):
         return jsonify({"message" : "Unable to change complete status"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@crud_bp.route("/<int:task_id>", methods=["DELETE"])
+@crud_bp.route("/delete/<int:task_id>", methods=["DELETE"])
+@jwt_required()
 def delete_task(task_id):
+    """
+    @Brief: Function deletes a task based on the task ID.
+    @Param: task_id: Int the task id to be deleted
+    @Return: JSON string with success message
+    """
+
+    currUsr = int(get_jwt_identity())
+
     try:
+        print(f"User is: {currUsr}")
+        # Get the user
+        usrAdmin = db.session.get(Users, currUsr).admin
         tsk = db.session.get(Tasks, task_id)
+        
         if tsk is None:
             return jsonify({"message" : "No task id found"}), HTTPStatus.BAD_REQUEST
         
+        if tsk.created_by != currUsr and not usrAdmin:
+            return jsonify({"message" : "Unable to delete task"}), HTTPStatus.FORBIDDEN
+
         db.session.delete(tsk)
         db.session.commit()
         return jsonify({"message" : "deleted task"}), HTTPStatus.OK
