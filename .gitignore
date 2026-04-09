@@ -3,6 +3,7 @@
 .venv/
 .env
 app/__pycache__/
+.pytest_cache/
 
 
 #Data
