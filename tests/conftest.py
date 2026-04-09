@@ -24,7 +24,8 @@ def test_user(client: FlaskClient):
         "first_name" : "admin",
         "last_name" : "user",
         "email" : "admin@taskapi.com",
-        "password" : "Ch@ng3Me!"
+        "password" : "Ch@ng3Me!",
+        "admin" : True
     }
     res = client.post(url,json=data)
     assert res.status_code == HTTPStatus.CREATED, "Failed to create pyFixure user"
